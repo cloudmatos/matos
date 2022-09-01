@@ -1,0 +1,14 @@
+[MASTER]
+jobs=4 #number of processes to use
+ignore=test
+
+[BASIC]
+good-names=Matos #names to be considered ok
+[pre-commit-hook]
+command=custom_pylint
+disable=E0401, C0301, C0114, E0015, C0115, R0903, C0103, W0703, W0613, W0703, W1203, R0902, R0913
+
+[FORMAT]
+
+# Maximum number of characters on a single line.
+max-line-length=120
