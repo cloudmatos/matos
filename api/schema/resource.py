@@ -218,7 +218,8 @@ class ResourceSchema(Schema):
             'elasticache',
             'network_firewall',
             'macie',
-            'waf'
+            'waf',
+            'workspaces'
         ]
 
     cluster = List(Nested(ResourceClusterSchema), required=True)
@@ -272,4 +273,5 @@ class ResourceSchema(Schema):
     network_firewall = List(Dict())
     macie = List(Dict())
     waf = List(Dict())
+    workspaces = List(Dict())
 
