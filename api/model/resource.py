@@ -50,3 +50,5 @@ class ResourceModel:
         self.elasticache = resource.get('elasticache')
         self.network_firewall = resource.get('network_firewall')
         self.macie = resource.get('macie')
+        self.waf = resource.get('waf')
+
