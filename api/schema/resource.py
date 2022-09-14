@@ -214,7 +214,8 @@ class ResourceSchema(Schema):
             'cloudformation',
             'ecs',
             'ecr',
-            'kinesis'
+            'kinesis',
+            'elasticache'
         ]
 
     cluster = List(Nested(ResourceClusterSchema), required=True)
@@ -264,4 +265,4 @@ class ResourceSchema(Schema):
     ecr = List(Dict())
     account = List(Dict())
     kinesis = List(Dict())
-
+    elasticache = List(Dict())

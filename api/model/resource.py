@@ -47,3 +47,5 @@ class ResourceModel:
         self.ecs = resource.get('ecs')
         self.ecr = resource.get('ecr')
         self.kinesis = resource.get('kinesis')
+        self.elasticache = resource.get('elasticache')
+
