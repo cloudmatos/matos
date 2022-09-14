@@ -108,7 +108,6 @@ def aws_account(resource,provider):
 
     return account
 
-
 def aws_elasticache(resource,provider):
     """AWS elasticache service"""
     elasticache = selfish({
@@ -117,6 +116,16 @@ def aws_elasticache(resource,provider):
     })
 
     return elasticache
+
+def aws_macie(resource,provider):
+    """AWS macie service"""
+    macie = selfish({
+        "name": "macie",
+        "source_data": resource
+    })
+
+    return macie
+
 
 def aws_network_firewall(resource,provider):
     """AWS network firewall service"""
@@ -1168,7 +1177,9 @@ cloud_resource_mappers = {
         'cloudformation': aws_cloudformation,
         'kinesis': aws_kinesis_stream,
         'elasticache': aws_elasticache,
-        'network_firewall': aws_network_firewall
+        'network_firewall': aws_network_firewall,
+        'elasticache': aws_elasticache,
+        'macie': aws_macie
 
     },
     'azure': {

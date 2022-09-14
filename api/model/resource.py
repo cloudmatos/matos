@@ -49,4 +49,4 @@ class ResourceModel:
         self.kinesis = resource.get('kinesis')
         self.elasticache = resource.get('elasticache')
         self.network_firewall = resource.get('network_firewall')
-
+        self.macie = resource.get('macie')
