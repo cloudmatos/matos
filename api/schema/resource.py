@@ -219,7 +219,9 @@ class ResourceSchema(Schema):
             'network_firewall',
             'macie',
             'waf',
-            'workspaces'
+            'workspaces',
+            'trail',
+            'secretsmanager'
         ]
 
     cluster = List(Nested(ResourceClusterSchema), required=True)
@@ -274,4 +276,6 @@ class ResourceSchema(Schema):
     macie = List(Dict())
     waf = List(Dict())
     workspaces = List(Dict())
+    trail = List(Dict())
+    secretsmanager = List(Dict())
 
