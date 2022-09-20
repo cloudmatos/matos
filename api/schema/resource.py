@@ -213,7 +213,8 @@ class ResourceSchema(Schema):
             'autoscaling',
             'cloudformation',
             'ecs',
-            'ecr'
+            'ecr',
+            'kinesis'
         ]
 
     cluster = List(Nested(ResourceClusterSchema), required=True)
@@ -262,3 +263,5 @@ class ResourceSchema(Schema):
     ecs = List(Dict())
     ecr = List(Dict())
     account = List(Dict())
+    kinesis = List(Dict())
+

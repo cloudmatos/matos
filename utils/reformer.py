@@ -653,6 +653,15 @@ def aws_cloudformation(resource, provider):
     })
 
 
+def aws_kinesis_stream(resource, provider):
+    """
+    aws kinesis stream mapper
+    """
+    return selfish({
+        "source_data": resource
+    })
+
+
 def azure_cluster_pod(resource):
     """
     azure cluster mapper
@@ -1136,7 +1145,8 @@ cloud_resource_mappers = {
         'securityhub': aws_securityhub,
         'emr': aws_emr,
         'autoscaling': aws_autoscaling,
-        'cloudformation': aws_cloudformation
+        'cloudformation': aws_cloudformation,
+        'kinesis': aws_kinesis_stream
 
     },
     'azure': {

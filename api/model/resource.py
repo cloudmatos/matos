@@ -46,3 +46,4 @@ class ResourceModel:
         self.cloudformation = resource.get('cloudformation')
         self.ecs = resource.get('ecs')
         self.ecr = resource.get('ecr')
+        self.kinesis = resource.get('kinesis')
