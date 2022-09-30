@@ -118,6 +118,7 @@ def aws_elasticache(resource,provider):
 
     return elasticache
 
+
 def aws_macie(resource,provider):
     """AWS macie service"""
     macie = selfish({
@@ -147,6 +148,16 @@ def aws_waf(resource,provider):
     })
 
     return waf
+
+
+def aws_workspaces(resource,provider):
+    """AWS workspaces service"""
+    workspaces = selfish({
+        "name": "workspaces",
+        "source_data": resource
+    })
+
+    return workspaces
 
 
 def aws_glue_job(resource):
@@ -1191,8 +1202,8 @@ cloud_resource_mappers = {
         'network_firewall': aws_network_firewall,
         'elasticache': aws_elasticache,
         'macie': aws_macie,
-        'waf': aws_waf
-
+        'waf': aws_waf,
+        'workspaces': aws_workspaces
 
     },
     'azure': {
