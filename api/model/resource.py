@@ -47,3 +47,5 @@ class ResourceModel:
         self.ecs = resource.get('ecs')
         self.ecr = resource.get('ecr')
         self.kinesis = resource.get('kinesis')
+        self.key_vault = resource.get('key_vault')
+        self.postgresql = resource.get('postgresql')

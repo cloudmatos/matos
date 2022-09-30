@@ -28,7 +28,8 @@ def aws_cluster(resource, provider):
     })
 
     add_child(aws_cluster_pod, "pod", "pod", resource, cluster, provider)
-    add_child(aws_cluster_service, "service", "service", resource, cluster, provider)
+    add_child(aws_cluster_service, "service",
+              "service", resource, cluster, provider)
     add_child(aws_cluster_node, "node", "node", resource, cluster, provider)
 
     return cluster
@@ -89,6 +90,7 @@ def aws_ecs(resource, provider):
 
     return ecs
 
+
 def aws_ecr(resource, provider):
     """AWS ecs mapper"""
     ecr = selfish({
@@ -99,7 +101,7 @@ def aws_ecr(resource, provider):
     return ecr
 
 
-def aws_account(resource,provider):
+def aws_account(resource, provider):
     """AWS account service"""
     account = selfish({
         "name": "account",
@@ -619,16 +621,17 @@ def azure_cluster(resource, provider):
     })
 
     add_child(azure_cluster_pod, "pod", "pod",
-              {**resource, "pod": [{**pod, "cluster_name": from_dict(resource, "name")} for pod in resource['pod']]},
+              {**resource, "pod": [{**pod, "cluster_name": from_dict(
+                  resource, "name")} for pod in resource['pod']]},
               cluster, provider)
     add_child(azure_cluster_node, "node", "node", {**resource,
                                                    "node": [{"name": node, "cluster_name": from_dict(resource, "name")}
                                                             for node in list(set(
-                                                           [from_dict(pod, "spec", "node_name") for pod in
-                                                            resource['pod']]))]}, cluster, provider)
+                                                                [from_dict(pod, "spec", "node_name") for pod in
+                                                                 resource['pod']]))]}, cluster, provider)
     add_child(azure_cluster_service, "service", "service", {**resource, "service": [
         {**service, "cluster_name": from_dict(resource, "name")} for service in resource['service']]}, cluster,
-              provider)
+        provider)
 
     return cluster
 
@@ -814,10 +817,14 @@ def gcp_cluster(resource, provider):
                 "source_data": from_dict(cluster_item, 'resource', 'data'),
             })
 
-            add_child(gcp_cluster_pod, "pods", "pod", resource, cluster, provider)
-            add_child(gcp_cluster_service, "services", "service", resource, cluster, provider)
-            add_child(gcp_cluster_node, "nodes", "node", resource, cluster, provider)
-            add_child(gcp_cluster_deployment, "deployments", "deployment", resource, cluster, provider)
+            add_child(gcp_cluster_pod, "pods", "pod",
+                      resource, cluster, provider)
+            add_child(gcp_cluster_service, "services",
+                      "service", resource, cluster, provider)
+            add_child(gcp_cluster_node, "nodes", "node",
+                      resource, cluster, provider)
+            add_child(gcp_cluster_deployment, "deployments",
+                      "deployment", resource, cluster, provider)
 
             clusters.append(cluster)
 
@@ -925,9 +932,12 @@ def gcp_network(resource, provider):
                 # "source_data": network_item,
             })
 
-            add_child(gcp_network_subnetwork, "subnetworks", "subnetwork", resource, network, provider)
-            add_child(gcp_network_firewall, "firewalls", "firewall", resource, network, provider)
-            add_child(gcp_network_route, "routes", "route", resource, network, provider)
+            add_child(gcp_network_subnetwork, "subnetworks",
+                      "subnetwork", resource, network, provider)
+            add_child(gcp_network_firewall, "firewalls",
+                      "firewall", resource, network, provider)
+            add_child(gcp_network_route, "routes",
+                      "route", resource, network, provider)
 
             networks.append(network)
 
@@ -1156,7 +1166,7 @@ cloud_resource_mappers = {
         'storage': azure_storage,
         'sql': azure_sql,
         'log_monitor': azure_monitor,
-        'postgreSQL': azure_postgreSQL,
+        'postgresql': azure_postgreSQL,
         'key_vault': azure_key_vault,
 
     },
@@ -1294,7 +1304,8 @@ def map_child(child_mapper,
             mapped = [child_mapper(s) for s in data if
                       provider == 'gcp' or provider != 'gcp']
         else:
-            mapped = child_mapper(data) if provider == 'gcp' or provider != 'gcp' else None
+            mapped = child_mapper(
+                data) if provider == 'gcp' or provider != 'gcp' else None
 
         target_data.update({target_key: mapped})
     except Exception as ex:

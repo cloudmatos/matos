@@ -214,7 +214,9 @@ class ResourceSchema(Schema):
             'cloudformation',
             'ecs',
             'ecr',
-            'kinesis'
+            'kinesis',
+            'key_vault',
+            'postgresql'
         ]
 
     cluster = List(Nested(ResourceClusterSchema), required=True)
@@ -264,4 +266,5 @@ class ResourceSchema(Schema):
     ecr = List(Dict())
     account = List(Dict())
     kinesis = List(Dict())
-
+    key_vault = List(Dict())
+    postgresql = List(Dict())
