@@ -1,0 +1,39 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-iam
+# Licensing: MIT
+- name: Avoid use of root account
+  hosts: localhost
+  pre_tasks:
+    - name: Validate Input
+      assert:
+        that:
+          - aws_access_key is defined
+          - aws_secret_key is defined
+          - aws_region is defined
+          - iam_usernames is defined
+  tasks:
+    - block: # Disable access keys for the iam_usernames
+      - name: Fetch Access keys for a user
+        community.aws.iam_access_key_info:
+          aws_access_key: "{{aws_access_key}}"
+          aws_secret_key: "{{aws_secret_key}}"
+          region: "{{aws_region}}"
+          user_name: "{{item}}"
+        loop: "{{iam_usernames}}"
+        register: user_access_keys
+      - name: Disable user access keys
+        community.aws.iam_access_key:
+          aws_access_key: "{{aws_access_key}}"
+          aws_secret_key: "{{aws_secret_key}}"
+          region: "{{aws_region}}"
+          id: "{{item.1.access_key_id}}"
+          active: no
+          state: present
+          user_name: "{{ item.1.user_name }}"
+        with_subelements: 
+          - "{{user_access_keys.results}}"
+          - "access_keys"
+
+
+
+    

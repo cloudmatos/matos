@@ -1,0 +1,11 @@
+- name: Create Elastic Network Interface
+  amazon.aws.ec2_eni:
+    description: "ENI Created to change public ip to private ips (ec2)"
+    subnet_id: "{{subnet_id}}"
+    state: present
+  register: eni
+
+- name: allocate a new elastic IP without associating it to anything
+  community.aws.ec2_eip:
+    state: present
+  register: eip

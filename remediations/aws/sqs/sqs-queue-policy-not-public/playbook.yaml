@@ -1,0 +1,89 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-sqs
+# Licensing: MIT
+
+---
+- hosts: "localhost"
+  connection: "local"
+  gather_facts: false
+
+  vars:
+    region: "{{ aws_region }}"
+    policy_file: "sqs_policy.json"
+
+  pre_tasks:
+  - name: Validate Input
+    assert:
+      that:
+      - aws_access_key is defined
+      - aws_secret_key is defined
+      - aws_region is defined
+      - action is defined
+      - queue_url is defined
+
+  tasks:
+    - name: Extract AWS Accont ID from ARN     
+      set_fact:  
+        account_id: "{{ queue_url.split('/')[3] }}"
+    - name: Set the Principal value
+      set_fact:      
+        principal: "{{ 'arn:aws:iam::' + account_id + ':root' }}"
+
+    - debug: var=principal
+
+    - name: Check ansible version
+      when: (ansible_version.major == 2 and ansible_version.minor < 8 ) or (ansible_version.major < 2)
+      run_once: yes
+      fail:
+        msg: Please use Ansible 2.8 or newer
+
+    # Get SQS Repo policy
+    - name: Get SQS Topic Policy
+      shell: >
+        AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{ aws_secret_key }}"
+        aws sqs get-queue-attributes
+        --queue-url "{{ queue_url }}"
+        --attribute-names All 
+        --query Attributes.Policy 
+        --output text 
+        --region "{{ region }}"
+      register: sqs_policy
+      when: action is defined and action == 'sqs_queue_policy_not_public'
+    - set_fact:
+        sqs_policy_details : "{{ sqs_policy.stdout | from_json }}"
+      failed_when: "'An error occurred' in sqs_policy.stderr"
+    # - debug: var=sqs_doc_file
+
+    # Create Policy json from the current Policy  
+    - name: Create a json file with SNS Policy details
+      copy:
+        dest: "{{ policy_file }}"
+        content: "{{ sqs_policy_details }}" 
+
+    # Update policy's __Principal__    
+    - name: Update the Policy JSON file
+      json_patch:
+          src: "{{ policy_file }}"
+          operations:
+            - op: replace
+              path: "Statement/0/Principal/AWS"
+              value: "{{ principal }}"
+      register: updated
+
+    - name: Read JSON file
+      set_fact:
+          policy_contents: "{{ lookup('file', '{{ policy_file }}') | to_json }}"
+
+    # Update SNS Topic attribute with the new policy 
+    - name: Update SQS Queue new policy
+      shell: >
+        AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{ aws_secret_key }}"
+        aws sqs set-queue-attributes \
+        --region "{{ region }}"
+        --queue-url "{{ queue_url }}"
+        --attributes '{ "Policy": {{ policy_contents }} }'
+      register: sqs_topic_policy_updated
+      failed_when: "'An error occurred' in sqs_topic_policy_updated.stderr"
+      changed_when: "sqs_topic_policy_updated.changed == 'true'"
+
+   

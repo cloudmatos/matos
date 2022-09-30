@@ -1,0 +1,48 @@
+---
+- hosts: "localhost"
+  connection: "local"
+  gather_facts: false
+  pre_tasks:
+    - name: Validate Input
+      assert:
+        that:
+          - aws_access_key is defined
+          - aws_secret_key is defined
+          - aws_region is defined
+  tasks:
+    - name: Check ansible version
+      when: (ansible_version.major == 2 and ansible_version.minor < 8 ) or (ansible_version.major < 2)
+      run_once: yes
+      fail:
+        msg: Please use Ansible 2.8 or newer
+
+    - name: Import static var data
+      include_vars:
+        dir: vars
+        ignore_unknown_extensions: True
+        extensions:
+          - yaml 
+
+    - name: Block EMR Public Access
+      shell: >
+        AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{ aws_secret_key }}" aws ec2 describe-network-interfaces --query 'NetworkInterfaces[*].Association.PublicIp' --region {{ aws_region }}
+      register: ec2_public_ips
+      failed_when: ec2_public_ips.failed
+    - debug: var=ec2_public_ips.stdout
+
+    - block:
+        - name: "Stop Execution"
+          debug:
+            msg: "No Need to execute further as No public ips Found"
+
+        - meta: end_play
+      when: ec2_public_ips.stdout == "[]"
+
+    - block:
+        - name: "Get Ec2 Instance Ids"
+          shell: >
+            AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{ aws_secret_key }}" aws ec2 describe-instances --filter Name=ip-address,Values="{{ec2_public_ips.stdout}}" --query 'Reservations[].Instances[].InstanceId' --region {{ aws_region }}
+          register: ec2_instances
+        - debug: var=ec2_instances.stdout
+
+   

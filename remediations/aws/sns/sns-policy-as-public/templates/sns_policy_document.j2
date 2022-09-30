@@ -1,0 +1,17 @@
+{
+  "Statement": [
+    {
+      "Sid": "AWSConfigSNSPolicy",
+      "Action": [
+        "sns:Publish"
+      ],
+      "Effect": "Allow",
+      "Resource": "arn:aws:sns:{{aws_region}}:{{aws_account_id}}:{{sns_topic}}",
+      "Principal": {
+        "AWS": [
+          "{{aws_account_id}}"
+        ]
+      }
+    }
+  ]
+}

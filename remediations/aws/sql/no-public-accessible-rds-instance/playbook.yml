@@ -1,0 +1,21 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-sql
+# Licensing: MIT
+---
+# Database Remediation Use Cases
+- name: "Database Remediation Use Cases"
+  hosts: localhost
+  gather_facts: false
+  vars:
+    region: "{{ aws_region }}"
+  tasks:
+    # RDS - Public Access Disable - Completed
+    - name: "Public access status Update"
+      community.aws.rds_instance:
+        db_instance_identifier: "{{ db_instance }}"
+        region: "{{ region }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        publicly_accessible: "{{ choice }}"
+        apply_immediately: yes
+      when: action is defined and action == 'dbpublicaccess'

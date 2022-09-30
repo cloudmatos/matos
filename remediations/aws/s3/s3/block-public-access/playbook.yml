@@ -1,0 +1,29 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-s3
+# Licensing: MIT
+
+- name: AWS S3 Remediation - Block Bucket Public Access
+  hosts: localhost
+  gather_facts: no
+  pre_tasks:
+    - name: Validate Input
+      assert:
+        that:
+          - aws_access_key is defined
+          - aws_secret_key is defined
+          - region is defined
+          - bucket_name is defined
+  tasks:
+    - name: Disable S3 bucket public access
+      s3_bucket:
+        name: "{{ bucket_name }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        state: present
+        region: "{{ region }}"
+        purge_tags: no
+        tags:
+          matos_public_block: "True"
+        public_access:
+          ignore_public_acls: yes
+          restrict_public_buckets: yes

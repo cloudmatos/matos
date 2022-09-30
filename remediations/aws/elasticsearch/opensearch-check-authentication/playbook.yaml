@@ -1,0 +1,148 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-elasticsearch
+# Licensing: MIT
+---
+- hosts: "localhost"
+  connection: "local"
+  gather_facts: false
+  vars:
+       is_ip_private: 'false'
+       is_ip_public: 'false'
+       is_ip_zeronet: 'false'
+       is_ip_star: 'false'
+       condition_ips: []
+
+  pre_tasks:
+    - name: Validate Input
+      assert:
+        that:
+        - aws_access_key is defined
+        - aws_secret_key is defined
+  
+  tasks:
+    - name: Check ansible version
+      when: (ansible_version.major == 2 and ansible_version.minor < 8 ) or (ansible_version.major < 2)
+      run_once: yes
+      fail:
+        msg: Please use Ansible 2.8 or newer
+
+    - name: Get endpoint or vpc endppints
+      shell: >
+         AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{aws_secret_key}}"
+         aws opensearch describe-domain --domain-name {{domain_name}} --region {{aws_region}} 
+      when: action is defined and action == 'opensearch_check_authentication'
+      register: domain_config 
+    - set_fact:
+          endpoint : "{{domain_config.stdout}}"
+
+    - name: Evaluate the match for private vpc
+      set_fact: 
+        match_datavpc: "{{ endpoint | json_query(query_domain) }}"
+      vars: 
+        query_domain: "DomainStatus.Endpoints.vpc"
+      when: endpoint.DomainStatus.Endpoint is not defined
+
+    - name: Evaluate the match for public access
+      set_fact: 
+        match_datavpc: "{{ endpoint | json_query(query_domain) }}"
+      vars: 
+        query_domain: "DomainStatus.Endpoint"
+      when: endpoint.DomainStatus.Endpoints is not defined
+
+    - name: If VPC contains Endpoint
+      debug: msg="Amazon OpenSerch domain is in vpc run extra779 to make sure it is not exposed using custom proxy"
+      when: '"vpc" in match_datavpc'
+
+    - name: Get and validate the policy
+      block:
+        - name: Get policy 
+          shell: >
+             AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{aws_secret_key}}"
+             aws opensearch describe-domain-config --domain-name {{domain_name}} --region {{aws_region}} --query 'DomainConfig.AccessPolicies.Options' --output text
+          register: policy_file 
+        - set_fact:
+              policy : "{{policy_file.stdout}}"
+        - name: Validate the policy
+          set_fact: 
+            match_effect_allow: "{{ policy | json_query(query_effect_allow) }}"
+            match_aws_principal_all: "{{ policy | json_query(query_aws_principal_all) }}"
+            match_principal_all: "{{ policy | json_query(query_principal_all) }}"
+            match_policy_condition : "{{ policy | json_query(query_condition) }}"
+          vars:
+            query_effect_allow: "Statement[?Effect=='Allow']"
+            query_aws_principal_all: "Statement[?Principal.AWS=='*']"
+            query_principal_all: "Statement[?Principal=='*']"
+            query_condition: "Statement[*].Condition.IpAddress"
+          
+        - name: Evaluating the match
+          debug: msg="policy may allow Anonymous users to perform actions"
+          when: 
+          - (match_effect_allow | length > 0) 
+          - (match_aws_principal_all | length > 0) or 
+            (match_principal_all | length > 0) or (match_policy_condition | length > 0)
+        - name: Check Policy open conditon
+          debug: msg="The Policy has no condition"
+          when: (match_policy_condition | length <= 0)
+
+        - name: Check policy has condition and validate the ip addresses
+          block:
+            - name: list all the ips
+              set_fact:
+                condition_ips:  "{{ policy | json_query(query_ip) }}"
+              vars:
+                query_ip: "Statement[*].Condition.IpAddress.\"aws:SourceIp\" | [0]"
+            - name: set string as array
+              set_fact:
+                condition_ips: ["{{condition_ips}}"]
+              when: condition_ips is string
+            - name: list ips
+              debug:
+                 msg: '{{item}}'
+              loop: "{{condition_ips}}"
+            - name: check private ip
+              set_fact: 
+                 is_ip_private: 'true' 
+              when: 'item is match("192.168.10.*") or item is match("172.1[6789].*") or item is match("172.2[0-9].*") or item is match("172.3[01].*")'   
+              loop: "{{condition_ips}}"
+            - name: check public ip
+              set_fact: 
+                  is_ip_public: 'true'
+              when: 'item is match("0.0.0.0/[0-63]")'   
+              loop: "{{condition_ips}}"
+            - name: check public net ip
+              set_fact: 
+                  is_ip_zeronet: 'true'
+              when: item == '0.0.0.0'   
+              loop: "{{condition_ips}}"
+            - name: check public has *
+              set_fact: 
+                  is_ip_star: 'true'
+              when: item == '*'   
+              loop: "{{condition_ips}}"
+            # TO MAKE CURL REQUEST AND SO TO KIBANA
+            - name: checking all the conditions
+              block:
+
+                - name: curl condition 
+                  shell: curl -m 2 -s -w "%{http_code}" -o /dev/null -X GET "https://{{match_datavpc}}/_cat/indices" 
+                  register: curl_file
+                - name: checking the curl if it has 200
+                  debug:
+                    msg: policy allows Anonymous access and Opensearch service endpoint
+                  when: curl_file==200
+              
+                - name: kibana condition
+                  shell: curl -m 2 -s -w "%{http_code}" -o /dev/null -X GET "https://{{match_datavpc}}/_plugin/kibana"
+                  register: curl_file_kibana
+                - name: checking the curl if it has 200,301,302
+                  debug: 
+                    msg: policy allows Anonymous access and Kibana service endpoint
+                  when: curl_file_kibana==200 or curl_file_kibana==301 or curl_file_kibana==302
+
+              when: (match_policy_condition | length <= 0) or is_ip_public or is_ip_zeronet or is_ip_star
+            - name: checking private ip condition
+              debug:
+                msg: policy allows access from a Private IP or CIDR RFC1918
+              when: (match_policy_condition | length > 0) and is_ip_private==true
+          when: (match_policy_condition | length > 0)
+      when: '"vpc" not in match_datavpc'

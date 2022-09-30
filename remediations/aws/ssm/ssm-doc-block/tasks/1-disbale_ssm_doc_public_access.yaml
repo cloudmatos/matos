@@ -1,0 +1,10 @@
+- name: Disable SSM Doc Public access
+  shell: >
+    AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{ aws_secret_key }}" aws ssm update-service-setting  \
+    --setting-id /ssm/documents/console/public-sharing-permission \
+    --setting-value Disable \
+    --region {{ aws_region }}
+  register: ssm_disable_public
+  failed_when: "'An error occurred' in ssm_disable_public.stderr"
+  changed_when: "enable_security_hub.changed == 'true'"
+  no_log: true

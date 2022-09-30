@@ -1,0 +1,33 @@
+# Get ECR Repo policy
+- name: Get ECR Repo Policy
+  shell: >
+    AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{ aws_secret_key }}"
+    aws ecr get-repository-policy
+    --repository-name "{{ ecr_repo }}" 
+    --query "policyText"
+    --output text 
+    --region "{{ aws_region }}"
+  register: ecr_doc_file
+- set_fact:
+      ecr_policy : "{{ ecr_doc_file.stdout }}"
+  failed_when: "'An error occurred' in ecr_doc_file.stderr"
+
+# Evalaute for violations in policy
+- name: Evaluating the match
+  set_fact: 
+    # Match using json query which uses jmespath
+    match_effect_allow: "{{ ecr_policy | json_query(query_effect_allow) }}"
+    match_aws_principal_all: "{{ ecr_policy | json_query(query_aws_principal_all) }}"
+    match_principal_all: "{{ ecr_policy | json_query(query_principal_all) }}"
+  vars:
+      # Policy content evalautions
+      query_effect_allow: "Statement[?Effect=='Allow']"
+      query_aws_principal_all: "Statement[?Principal.AWS=='*']"
+      query_principal_all: "Statement[?Principal=='*']"
+
+- name: Evaluating the match
+  debug: msg="policy may allow Anonymous users to perform actions"
+  when: 
+   - (match_effect_allow | length > 0) 
+   - (match_aws_principal_all | length > 0) or 
+     (match_principal_all | length > 0)

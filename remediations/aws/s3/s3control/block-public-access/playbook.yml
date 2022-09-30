@@ -1,0 +1,31 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-s3
+# Licensing: MIT
+- name: Block account level public access
+  hosts: localhost
+  pre_tasks:
+    - name: Validate Input
+      assert:
+        that:
+          - aws_access_key is defined
+          - aws_secret_key is defined
+          - aws_region is defined
+          - aws_account_id is defined
+  vars:
+    auth: 'AWS_ACCESS_KEY_ID={{aws_access_key}} AWS_SECRET_ACCESS_KEY={{aws_secret_key}} AWS_DEFAULT_REGION={{aws_region}} '
+    input_block: {}
+  tasks:
+    - block: # Block public access
+      - name: Block public access via ACL and policy
+        ansible.builtin.shell:
+         cmd: "{{auth}} aws s3control get-public-access-block --account-id {{aws_account_id}}"
+        register: "s3control_resp"
+      - name: set value
+        set_fact:
+          s3control_resp: "{{s3control_resp.stdout}}"
+      - name: combine item
+        set_fact:
+          "public_block": {"BlockPublicAcls":"{{s3control_resp.PublicAccessBlockConfiguration.BlockPublicAcls}}","BlockPublicPolicy":"{{s3control_resp.PublicAccessBlockConfiguration.BlockPublicPolicy}}","IgnorePublicAcls":true,"RestrictPublicBuckets":true}
+      - name: Block public access via ACL and policy
+        ansible.builtin.shell:
+          cmd: "{{auth}} aws s3control put-public-access-block --account-id {{aws_account_id}} --public-access-block-configuration '{{public_block | to_json}}'"

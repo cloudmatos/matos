@@ -1,0 +1,45 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-iam
+# Licensing: MIT
+
+- name: Enable MFA
+  hosts: localhost
+  pre_tasks:
+    - name: Validate Input
+      assert:
+        that:
+          - aws_access_key is defined
+          - aws_secret_key is defined
+          - aws_region is defined
+          - aws_account_id is defined
+          - iam_usernames is defined
+  vars:
+    policy_document_file: ./policy_document_file.json
+    policy_name: "mfa_enable_access_{{aws_account_id}}"
+    group_name: "mfa_enable_access_group_{{aws_account_id}}"
+  tasks:
+    - block: # Create policy and role to only allow MFA enable rights
+      - name: Create IAM Managed Policy
+        community.aws.iam_managed_policy:
+          aws_access_key: "{{aws_access_key}}"
+          aws_secret_key: "{{aws_secret_key}}"
+          region: "{{aws_region}}"
+          aws_region: "{{aws_region}}"
+          policy_name: "{{policy_name}}"
+          policy_description: "A Helpful managed policy"
+          policy: "{{ lookup('file', policy_document_file) }}"
+          state: present
+        register: policy_resp
+      - name: Create group
+        community.aws.iam_group:
+          aws_access_key: "{{aws_access_key}}"
+          aws_secret_key: "{{aws_secret_key}}"
+          region: "{{aws_region}}"
+          aws_region: "{{aws_region}}"
+          name: "{{group_name}}"
+          managed_policies:
+            - "{{policy_resp.policy.arn}}"
+          state: present
+          users: "{{iam_usernames}}"
+        register: instance_group_resp
+      

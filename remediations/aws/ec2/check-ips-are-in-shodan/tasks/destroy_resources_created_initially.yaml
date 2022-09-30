@@ -1,0 +1,9 @@
+- name: Destroy Elastic Network Interface
+  amazon.aws.ec2_eni:
+    eni_id: "{{eni.interface.id}}"
+    state: absent
+
+- name: Delete Elastic Ip
+  community.aws.ec2_eip:
+    ip: "{{eip.public_ip}}"
+    state: absent

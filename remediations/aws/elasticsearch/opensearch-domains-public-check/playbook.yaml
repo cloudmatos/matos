@@ -1,0 +1,153 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-elasticsearch
+# Licensing: MIT
+
+---
+- hosts: "localhost"
+       
+  connection: "local"
+  gather_facts: false
+  vars:
+       is_ip_private: 'false'
+       is_ip_public: 'false'
+       is_ip_zeronet: 'false'
+       is_ip_star: 'false'
+       condition_ips: []
+       
+  pre_tasks:
+    - name: Validate Input
+      assert:
+        that:
+        - aws_access_key is defined
+        - aws_secret_key is defined
+        - aws_region is defined
+        - domain_name is defined
+        - action is defined
+
+  tasks:
+    - name: Check ansible version
+      when: (ansible_version.major == 2 and ansible_version.minor < 8 ) or (ansible_version.major < 2)
+      run_once: yes
+      fail:
+        msg: Please use Ansible 2.8 or newer
+
+    # Get the vpc endpoint and register it in endpoint
+    - name: Get endpoint or vpc endppoints
+      shell: >
+         AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{aws_secret_key}}"
+         aws opensearch describe-domain --domain-name {{domain_name}} --region {{aws_region}} 
+      when: action is defined and action == 'opensearch_domains_public_check'
+      register: domain_config 
+    - set_fact:
+          endpoint : "{{domain_config.stdout}}"
+
+    # Check if it has vpc access if it has set the endpoint to match_datavpc
+    - name: Evaluate the match for private vpc
+      set_fact: 
+        match_datavpc: "{{ endpoint | json_query(query_domain) }}"
+      vars: 
+        query_domain: "DomainStatus.Endpoints.vpc"
+      when: endpoint.DomainStatus.Endpoint is not defined
+    
+    # Check if it has public access if it has set the endpoint to match_datavpc
+    - name: Evaluate the match for public access
+      set_fact: 
+        match_datavpc: "{{ endpoint | json_query(query_domain) }}"
+      vars: 
+        query_domain: "DomainStatus.Endpoint"
+      when: endpoint.DomainStatus.Endpoints is not defined
+
+    # If endpoint is not in vpc need to validate the policy
+    - name: Get and validate the policy
+      block:
+        # Get the policy and register it in policy
+        - name: Get policy 
+          shell: >
+             AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{aws_secret_key}}"
+             aws opensearch describe-domain-config --domain-name {{domain_name}} --region {{aws_region}} --query 'DomainConfig.AccessPolicies.Options' --output text
+          register: policy_file 
+        - set_fact:
+              policy : "{{policy_file.stdout}}"
+          
+        # Validate the policy 
+        - name: Validate the policy
+          set_fact: 
+            match_effect_allow: "{{ policy | json_query(query_effect_allow) }}"
+            match_aws_principal_all: "{{ policy | json_query(query_aws_principal_all) }}"
+            match_principal_all: "{{ policy | json_query(query_principal_all) }}"
+            match_policy_condition : "{{ policy | json_query(query_condition) }}"
+          vars:
+            query_effect_allow: "Statement[?Effect=='Allow']"
+            query_aws_principal_all: "Statement[?Principal.AWS=='*']"
+            query_principal_all: "Statement[?Principal=='*']"
+            query_condition: "Statement[*].Condition.IpAddress"
+
+        - name: Check policy has condition and validate the ip addresses
+          block:
+            - name: list all the ips
+              set_fact:
+                condition_ips:  "{{ policy | json_query(query_ip) }}"
+              vars:
+                query_ip: "Statement[*].Condition.IpAddress.\"aws:SourceIp\" | [0]"
+          
+            - name: set string as array
+              set_fact:
+                condition_ips: ["{{condition_ips}}"]
+              when: condition_ips is string
+
+            - name: check private ip
+              set_fact: 
+                 is_ip_private: 'true' 
+              when: 'item is match("192.168.10.*") or item is match("172.1[6789].*") or item is match("172.2[0-9].*") or item is match("172.3[01].*")'   
+              loop: "{{condition_ips}}"
+
+            - name: check public ip
+              set_fact: 
+                  is_ip_public: 'true'
+              when: 'item is match("0.0.0.0/[0-63]")'   
+              loop: "{{condition_ips}}"
+
+            - name: check public net ip
+              set_fact: 
+                  is_ip_zeronet: 'true'
+              when: item == '0.0.0.0'   
+              loop: "{{condition_ips}}"
+
+            - name: check ip is aet to *
+              set_fact: 
+                  is_ip_star: 'true'
+              when: item == '*'   
+              loop: "{{condition_ips}}"
+
+            # Validate the ips and display the message accordingly
+            - name: check the values
+              block:
+                - name: check policy is open
+                  debug: msg='AWS Open Search domain policy allows acccess pricipal *'
+                  when: (match_policy_condition | length <= 0)
+                
+                - name: check policy has condition and zero ip mask 
+                  debug: msg='AWS Open Search domain policy allows acccess Principal=* and network 0.0.0.0'
+                  when: 
+                    - (match_policy_condition | length > 0) 
+                    -  is_ip_zeronet == true
+
+                - name: check policy has condition and star ip 
+                  debug: msg='AWS Open Search domain policy allows acccess Principal=* and network *'
+                  when: (match_policy_condition | length > 0) and is_ip_star == true
+
+                - name: check policy has condition and ip is public 
+                  debug: msg='AWS Open Search domain policy allows acccess Principal=* and Public IP or Network'
+                  when: (match_policy_condition | length > 0) and is_ip_public == true
+                
+              when: (match_policy_condition | length <= 0) or is_ip_zeronet or is_ip_star or is_ip_public
+  
+            - name: check policy has condition and ip is private 
+              debug: msg='Amazon OpenSearch domain policy allows access from a Private IP or CIDR RFC1918'
+              when: (match_policy_condition | length > 0) and is_ip_private == true
+
+            - name: check policy has condition and ip not private    
+              debug: msg='Amazon OpenSearch domain domain does not allow anonymous access'
+              when: is_ip_private == false  
+          when: (match_policy_condition | length > 0)
+      when: '"vpc" not in match_datavpc'

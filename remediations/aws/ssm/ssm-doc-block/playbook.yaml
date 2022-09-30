@@ -1,0 +1,34 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-ssm
+# Licensing: MIT
+---
+- hosts: "localhost"
+  connection: "local"
+  gather_facts: false
+  pre_tasks:
+  - name: Validate Input
+    assert:
+      that:
+      - aws_access_key is defined
+      - aws_secret_key is defined
+
+  tasks:
+    - name: Check ansible version
+      when: (ansible_version.major == 2 and ansible_version.minor < 8 ) or (ansible_version.major < 2)
+      run_once: yes
+      fail:
+        msg: Please use Ansible 2.8 or newer
+
+    - name: Import static var data
+      include_vars:
+        dir: vars
+        ignore_unknown_extensions: True
+        extensions:
+          - yaml 
+    
+    - name:  Disable SSM Public access
+      include_tasks: "{{ item }}"
+      loop:
+        - ./tasks/1-disbale_ssm_doc_public_access.yaml
+
+   
