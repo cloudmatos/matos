@@ -111,6 +111,67 @@ def aws_account(resource, provider):
     return account
 
 
+def aws_elasticache(resource,provider):
+    """AWS elasticache service"""
+    elasticache = selfish({
+        "name": "elasticache",
+        "source_data": resource
+    })
+
+    return elasticache
+
+def aws_secretsmanager(resource,provider):
+    """AWS secretsmanager service"""
+    secretsmanager = selfish({
+        "name": "secretsmanager",
+        "source_data": resource
+    })
+
+    return secretsmanager
+
+
+
+def aws_macie(resource,provider):
+    """AWS macie service"""
+    macie = selfish({
+        "name": "macie",
+        "source_data": resource
+    })
+
+    return macie
+
+
+def aws_network_firewall(resource,provider):
+    """AWS network firewall service"""
+    network_firewall = selfish({
+        "name": "network_firewall",
+        "source_data": resource
+    })
+
+    return network_firewall
+
+
+
+def aws_waf(resource,provider):
+    """AWS waf service"""
+    waf = selfish({
+        "name": "waf",
+        "source_data": resource
+    })
+
+    return waf
+
+
+def aws_workspaces(resource,provider):
+    """AWS workspaces service"""
+    workspaces = selfish({
+        "name": "workspaces",
+        "source_data": resource
+    })
+
+    return workspaces
+
+
 def aws_glue_job(resource):
     """
     aws glue job mapper
@@ -312,6 +373,15 @@ def aws_sql(resource, provider):
 def aws_cloudtrail(resource, provider):
     """
     aws cloudtrail mapper
+    """
+    return selfish({
+        "name": from_dict(resource, "Name"),
+        "source_data": resource
+    })
+
+def aws_trail(resource, provider):
+    """
+    aws trail mapper
     """
     return selfish({
         "name": from_dict(resource, "Name"),
@@ -1116,6 +1186,7 @@ cloud_resource_mappers = {
         'network': aws_network,
         'sql': aws_sql,
         'log_monitor': aws_cloudtrail,
+        'trail': aws_trail,
         'kms': aws_kms,
         'policy': aws_policy,
         'serviceAccount': aws_sa,
@@ -1156,7 +1227,14 @@ cloud_resource_mappers = {
         'emr': aws_emr,
         'autoscaling': aws_autoscaling,
         'cloudformation': aws_cloudformation,
-        'kinesis': aws_kinesis_stream
+        'kinesis': aws_kinesis_stream,
+        'elasticache': aws_elasticache,
+        'network_firewall': aws_network_firewall,
+        'elasticache': aws_elasticache,
+        'macie': aws_macie,
+        'waf': aws_waf,
+        'workspaces': aws_workspaces,
+        'secretsmanager': aws_secretsmanager
 
     },
     'azure': {
