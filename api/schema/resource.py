@@ -217,7 +217,8 @@ class ResourceSchema(Schema):
             'kinesis',
             'elasticache',
             'network_firewall',
-            'macie'
+            'macie',
+            'waf'
         ]
 
     cluster = List(Nested(ResourceClusterSchema), required=True)
@@ -270,3 +271,5 @@ class ResourceSchema(Schema):
     elasticache = List(Dict())
     network_firewall = List(Dict())
     macie = List(Dict())
+    waf = List(Dict())
+
