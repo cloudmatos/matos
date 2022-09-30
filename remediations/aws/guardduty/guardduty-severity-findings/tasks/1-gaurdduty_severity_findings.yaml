@@ -1,0 +1,33 @@
+# Get all the detectors of GuardDuty
+- name: Get cluster status
+  shell: >
+    AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{ aws_secret_key }}"
+    aws guardduty list-detectors
+    --query DetectorIds
+    --out text
+    --region {{ aws_region }}
+  register: guardduty_detectors
+
+# Find the severity in each Guard duty findings 
+- name: Find severity in GuardDuty
+  shell: >
+    AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{ aws_secret_key }}"
+    aws guardduty list-findings
+    --region {{ aws_region }} 
+    --detector-id "{{ gd_identifier }}"
+    --finding-criteria '{"Criterion":{"severity": {"Eq":["8"]}, "service.archived": {"Eq": ["false"]}}}' 2> /dev/null | wc -l | xargs
+  loop: 
+    - "{{guardduty_detectors.stdout }}"
+  loop_control:
+    loop_var: gd_identifier
+  register: gd_findings_count
+
+# If the findings count is more than 3, then it is severe finding and fail
+- name: Validate Guardduty findings
+  debug: 
+    msg: "Guard Duty id {{ gd_results.gd_identifier }}"
+  when: (gd_results.stdout | int) > 0
+  failed_when: (gd_results.stdout | int) > 0
+  loop: "{{ gd_findings_count.results }}"
+  loop_control:
+    loop_var: gd_results

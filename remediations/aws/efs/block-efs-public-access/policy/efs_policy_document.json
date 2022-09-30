@@ -1,0 +1,23 @@
+{  
+    "Version": "2012-10-17",
+    "Id": "efs-policy-wizard",
+    "Statement": [
+        {
+            "Sid": "efs-statement",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": [
+                "elasticfilesystem:ClientMount",
+                "elasticfilesystem:ClientWrite",
+                "elasticfilesystem:ClientRootAccess"
+            ],
+            "Condition": {
+                "Bool": {
+                    "elasticfilesystem:AccessedViaMountTarget": "true"
+                }
+            }
+        }
+    ]
+}

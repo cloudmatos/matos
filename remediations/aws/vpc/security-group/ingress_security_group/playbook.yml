@@ -1,0 +1,48 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-vpc
+# Licensing: MIT
+- name: Revoke public access to commons ports in a security group
+  hosts: localhost
+  vars:
+    ingress_rules: []
+    public_cidr_ipv4: "0.0.0.0/0"
+    public_cidr_ipv6: "::/0"
+  tasks:
+    - block: # Get security groups
+      - name: get security groups
+        vars:
+          rule_details:
+            "FromPort": "{{item.1.FromPort}}"
+            "ToPort": "{{item.1.ToPort}}"
+            "IpRanges": "{{item.1.IpRanges}}"
+            "IpProtocol": "{{item.1.IpProtocol}}"
+            "Ipv6Ranges": "{{item.1.Ipv6Ranges}}"
+            "GroupId": "{{item.0.GroupId}}"
+        set_fact:
+          ingress_rules: "{{ingress_rules + ([rule_details] if (rule_details.IpRanges|length > 0 and rule_details.IpRanges[0].CidrIp == public_cidr_ipv4) or (rule_details.Ipv6Ranges|length > 0 and rule_details.Ipv6Ranges[0].CidrIpv6 == public_cidr_ipv6) else [])}}"  
+        with_subelements: 
+          - "{{security_groups}}"
+          - IpPermissions
+    - block: # Revoke rules
+      - name: aws config
+        include_tasks: ./config_aws.yml
+      - name: invoke ingress rule ipv4
+        ansible.builtin.shell:
+          cmd: >
+            export AWS_ACCESS_KEY_ID={{ aws_access_key }} &&
+            export AWS_SECRET_ACCESS_KEY={{ aws_secret_key }} &&
+            aws ec2 revoke-security-group-ingress --group-id {{item.GroupId}} --ip-permissions FromPort={{item.FromPort}},ToPort={{item.ToPort}},IpProtocol={{item.IpProtocol}},IpRanges=[\{CidrIp={{item.IpRanges[0].CidrIp}}}] &&
+            unset AWS_ACCESS_KEY_ID &&
+            unset AWS_SECRET_ACCESS_KEY
+        when: item.IpRanges|length > 0  
+        loop: "{{ingress_rules}}"
+      - name: invoke ingress rule ipv6
+        ansible.builtin.shell:
+          cmd: >
+            export AWS_ACCESS_KEY_ID={{ aws_access_key }} &&
+            export AWS_SECRET_ACCESS_KEY={{ aws_secret_key }} &&
+            aws ec2 revoke-security-group-ingress --group-id {{item.GroupId}} --ip-permissions FromPort={{item.FromPort}},ToPort={{item.ToPort}},IpProtocol={{item.IpProtocol}},Ipv6Ranges=[\{CidrIpv6={{item.Ipv6Ranges[0].CidrIpv6}}}] &&
+            unset AWS_ACCESS_KEY_ID &&
+            unset AWS_SECRET_ACCESS_KEY
+        when: item.Ipv6Ranges|length > 0  
+        loop: "{{ingress_rules}}"

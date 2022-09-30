@@ -1,0 +1,29 @@
+- name: associate an elastic IP with an instance
+  community.aws.ec2_eip:
+    device_id: "{{instance_id}}"
+    ip: "{{eip.public_ip}}"
+
+- name: Attach ENI to ec2 instance
+  amazon.aws.ec2_eni:
+    eni_id: "{{eni.interface.id}}"
+    instance_id: "{{instance_id}}"
+    device_index: 1
+    attached: yes
+    state: present
+
+- name: Pause to wait to attach ENI and EIP
+  pause:
+    seconds: 5
+
+- name: disassociate an elastic IP from an instance
+  community.aws.ec2_eip:
+    device_id: "{{instance_id}}"
+    ip: "{{eip.public_ip}}"
+    state: absent
+
+- name: detach ENI from an instance
+  amazon.aws.ec2_eni:
+    eni_id: "{{eni.interface.id}}"
+    instance_id: "{{instance_id}}"
+    force_detach: true
+    state: absent

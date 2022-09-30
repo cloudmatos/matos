@@ -1,0 +1,27 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-vpc
+# Licensing: MIT
+- name: Remove all inress and egress rules from a security group
+  hosts: localhost
+  vars:
+    filters:
+      group-id: "{{security_group_id}}"
+  tasks:
+    - block: # Remove igress and egress rules from a security group
+      - name: Get security groups
+        amazon.aws.ec2_group:
+          aws_access_key: "{{aws_access_key}}"
+          aws_secret_key: "{{aws_secret_key}}"
+          group_id: "{{item.id}}"
+          name: "{{item.name}}"
+          description: "{{item.description}}"
+          rules: []
+          rules_egress: []
+          purge_rules : True
+          purge_rules_egress: True
+          state: present
+        register: security_groups_edit_resp
+        loop: "{{security_groups}}"
+        when: "security_groups"
+      
+               

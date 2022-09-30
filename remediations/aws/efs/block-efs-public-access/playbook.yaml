@@ -1,0 +1,35 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-efs
+# Licensing: MIT
+---
+- hosts: "localhost"
+  connection: "local"
+  gather_facts: false
+
+  vars:
+    efs_document_file: ./policy/efs_policy_document.json
+
+  pre_tasks:
+    - name: Validate Input
+      assert:
+        that:
+          - aws_access_key is defined
+          - aws_secret_key is defined
+          - aws_region is defined
+          - efs_id is defined
+          - efs_document_file is defined
+
+  tasks:
+    - name: Check ansible version
+      when: (ansible_version.major == 2 and ansible_version.minor < 8 ) or (ansible_version.major < 2)
+      run_once: yes
+      fail:
+        msg: Please use Ansible 2.8 or newer
+
+    - name: Disable EFS Public access
+      shell: >
+        AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{ aws_secret_key }}" aws efs put-file-system-policy --file-system-id {{efs_id}} --policy '{{lookup('file',efs_document_file)}}' --region "{{aws_region}}"
+      register: efs_disable_public
+      failed_when: efs_disable_public.stderr
+    - debug: var=efs_disable_public
+   

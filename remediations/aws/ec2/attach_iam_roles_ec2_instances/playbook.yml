@@ -1,0 +1,54 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-ec2
+# Licensing: MIT
+
+- name: "AWS VPC Remediation - Attaching AWS IAM Roles To EC2 Instances"
+  hosts: localhost
+  gather_facts: no
+  vars:
+    policy_name: "{{ instance_id }}_policy"
+    role_name: "{{ instance_id }}_role"
+    assume_policy_document_file: "./files/assume_policy_document.json"
+    policy_document_file: "./files/policy_document.json"
+  pre_tasks:
+    - name: Validate Input
+      assert:
+        that:
+          - aws_access_key is defined
+          - aws_secret_key is defined
+          - region is defined
+          - instance_id is defined
+  tasks:
+    - name: Create IAM Managed Policy
+      community.aws.iam_managed_policy:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        policy_name: "{{ policy_name }}"
+        policy_description: "A Helpful managed policy"
+        policy: "{{ lookup('file', policy_document_file) }}"
+        state: present
+      register: policy_resp
+    - name: Create role
+      community.aws.iam_role:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        name: "{{ role_name }}"
+        assume_role_policy_document: "{{ lookup('file',assume_policy_document_file) }}"
+        create_instance_profile: yes
+        managed_policies:
+          - "{{ policy_resp.policy.arn }}"
+        state: present
+      register: instance_role_resp
+    - debug:
+        msg: "{{ instance_role_resp }}"
+    - name: Pause for 5 seconds to make sure instance profile created
+      pause:
+        seconds: 5
+    - name: Assign instance profile
+      amazon.aws.ec2_instance:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        instance_ids:
+          - "{{ instance_id }}"
+        instance_role: "{{ role_name }}"
+        region: "{{ region }}"

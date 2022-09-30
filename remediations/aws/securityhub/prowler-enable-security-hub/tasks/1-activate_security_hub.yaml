@@ -1,0 +1,8 @@
+- name: Enable SecurityHub for a specific region
+  shell: >
+    AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{ aws_secret_key }}" aws securityhub enable-security-hub --enable-default-standards --tags '{"user": "matos_develop"}'
+    --region {{ aws_region }}
+  register: enable_security_hub
+  failed_when: "'An error occurred' in enable_security_hub.stderr"
+  changed_when: "enable_security_hub.changed == 'true'"
+  no_log: true

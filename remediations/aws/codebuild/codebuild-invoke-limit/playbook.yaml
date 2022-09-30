@@ -1,0 +1,85 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-codebuild
+# Licensing: MIT
+
+---
+- hosts: "localhost"
+  connection: "local"
+  gather_facts: true
+
+  vars:
+    region: "{{ aws_region }}"
+    days_limit: 90     # No of days limit. Currently set it for 90 days
+
+  pre_tasks:
+  - name: Validate Input
+    assert:
+      that:
+      - aws_access_key is defined
+      - aws_secret_key is defined
+      - region is defined
+      - action is defined
+      - project_name is defined
+
+  tasks:
+
+    # Set Epoch time of current_date - 90 days
+    - set_fact: 
+        ninety_days_ago_epoch: "{{ (ansible_date_time['epoch']|int)-(86400 * days_limit) }}"
+
+    # Check Ansible version compatibility
+    - name: Check ansible version
+      when: (ansible_version.major == 2 and ansible_version.minor < 8 ) or (ansible_version.major < 2)
+      run_once: yes
+      fail:
+        msg: Please use Ansible 2.8 or newer
+
+    # Set AWS CLI to use UNIX Epoch timeformat. The CLI version 2 uses iso iso8601
+    - name: Get Project Id CodeBuild Projects
+      shell: >
+        aws configure set cli_timestamp_format wire
+
+    # Get latest project executon Id of the Project
+    - name: Get Project Id CodeBuild Projects
+      shell: >
+        AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{ aws_secret_key }}"
+        aws codebuild list-builds-for-project --output text
+        --project-name "{{ project_name }}" 
+        --query 'ids[0]'
+        --region {{ region }}
+      when: action is defined and action == 'codebuild_invoke_limit'
+      register: result
+    - set_fact:
+          project_id : "{{ result.stdout }}"  
+
+    - name: Process Project Ids        
+    # Grab the last execution datetime of the project
+      block: 
+        - name: Get Project last invoked time
+          shell: >
+            AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{ aws_secret_key }}"
+            aws codebuild batch-get-builds 
+            --ids "{{ project_id }}" 
+            --query 'builds'
+            --region {{ region }}
+          register: project_builds
+        - set_fact:
+            project_last_invoke_time : "{{ project_builds.stdout }}"  
+      when: (project_id|string != 'null')
+
+    # Store End time of last build execution
+    - name: Filtering the endtime
+      set_fact: 
+        last_execution_time: "{{project_last_invoke_time[0].endTime}}"
+
+    # Set the datetime variable of 90 days limit
+    # Compare whether the project execution is 90 days old
+    - name: Verify the last invoked time is greater than 90 days
+      debug:
+        msg: "{{ project_name }} has last invoked longer than 1 days"
+      when: ( last_execution_time|int /86400+25569 < ninety_days_ago_epoch|int /86400+25569 )
+      register: project_90_days_age
+      failed_when: "'An error occurred' in project_90_days_age.stderr"
+      changed_when: "project_90_days_age.changed == 'true'"
+
+   

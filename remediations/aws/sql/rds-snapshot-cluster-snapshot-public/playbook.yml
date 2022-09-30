@@ -1,0 +1,24 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-sql
+# Licensing: MIT
+---
+# Database Remediation Use Cases
+- name: "Database Remediation Use Cases"
+  hosts: localhost
+  gather_facts: false
+  vars:
+    region: "{{ aws_region }}"
+  tasks:
+    # RDS Manual Snapshots - Remove Public Access - Completed
+    - name: "RDS Manual Snapshots - Remove Public Access"
+      shell:
+        cmd: >
+          export AWS_ACCESS_KEY_ID={{ aws_access_key }} &&
+          export AWS_SECRET_ACCESS_KEY={{ aws_secret_key }} &&
+          aws rds modify-db-snapshot-attribute --region {{ region }} --db-snapshot-identifier {{ item }} --attribute-name restore --values-to-remove all &&
+          unset AWS_ACCESS_KEY_ID &&
+          unset AWS_SECRET_ACCESS_KEY
+      loop: "{{sp_instance}}"
+      when: action is defined and action == 'snapshot_remove_public_access'
+
+

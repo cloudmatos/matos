@@ -1,0 +1,21 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-ec2
+# Licensing: MIT
+- name: Amazon EBS snapshots should not be publicly restorable
+  hosts: localhost
+  pre_tasks:
+    - name: Validate Input
+      assert:
+        that:
+          - aws_access_key is defined
+          - aws_secret_key is defined
+          - aws_region is defined
+          - snapshot_ids is defined
+  tasks:
+    - block:
+      - name: Delete public permissions
+        ansible.builtin.shell:
+          cmd: "AWS_ACCESS_KEY_ID={{aws_access_key}} AWS_SECRET_ACCESS_KEY={{aws_secret_key}} aws ec2 modify-snapshot-attribute --region {{aws_region}} --snapshot-id {{item}} --attribute createVolumePermission --operation-type remove --group-names all"
+        loop: "{{snapshot_ids}}"
+        when: disable_public_snapshot is defined and disable_public_snapshot == True
+      

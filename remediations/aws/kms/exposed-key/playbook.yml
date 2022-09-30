@@ -1,0 +1,52 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-kms
+# Licensing: MIT
+- name: Block public access on a s3 bucket
+  hosts: localhost
+  pre_tasks:
+    - name: Validate Input
+      assert:
+        that:
+          - aws_access_key is defined
+          - aws_secret_key is defined
+          - aws_region is defined
+  
+  vars:
+    policy_condition:
+      Condition: 
+        StringEquals:
+          "kms:CallerAccount": "{{account_id}}"
+    new_policy:
+      Version: "{{key_policy.Version}}"
+      Id: "{{key_policy.Id}}"
+    statement: []
+  tasks:
+    - block: # Prepare policy
+      - name: Add condition in the policy statement
+        set_fact:
+          statement: "{{statement + [item]}}"
+        loop: "{{key_policy.Statement}}"
+        when: item.Condition is  defined
+      - name: Add condition in the policy statement
+        set_fact:
+          statement: "{{statement + [item | combine(policy_condition)]}}"
+        loop: "{{key_policy.Statement}}"
+        when: item.Condition is not defined
+      - name: set updated statement in the policy
+        set_fact:
+          new_policy: "{{new_policy | combine({'Statement':statement})}}"
+      - name: Prepare policy
+        debug:
+          msg: "{{new_policy}}"
+      - name: Update policy
+        community.aws.aws_kms:
+          aws_access_key: "{{aws_access_key}}"
+          aws_secret_key: "{{aws_secret_key}}"
+          region: "{{aws_region}}"
+          key_id: "{{key_id}}"
+          policy: "{{new_policy}}"
+          state: present
+
+
+
+        

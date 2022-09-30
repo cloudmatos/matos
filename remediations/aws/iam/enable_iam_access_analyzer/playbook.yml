@@ -1,0 +1,23 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-iam
+# Licensing: MIT
+- name: Enable EBS encryption be default
+  hosts: localhost
+  pre_tasks:
+    - name: Validate Input
+      assert:
+        that:
+          - aws_access_key is defined
+          - aws_secret_key is defined
+          - aws_region is defined
+          - analyzer_type is defined
+          - analyzer_name is defined
+  tasks:
+    - block: # Create access analyzer for the specified region
+      - name: Create access analyzer
+        shell: >
+          AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{ aws_secret_key }}" aws accessanalyzer create-analyzer --type "{{analyzer_type}}"  --analyzer-name "{{analyzer_name}}" --region "{{aws_region}}"
+        register: analyzer_resp
+        failed_when: analyzer_resp.stderr|length!=0 and 'same name already exists' not in analyzer_resp.stderr
+      
+      

@@ -1,0 +1,44 @@
+# Project: Matos by CloudMatos (https://www.cloudmatos.com/) - Automate your Cloud Security & Compliance
+# Asset: aws-acm
+# Licensing: MIT
+- hosts: "localhost"
+  connection: "local"
+  gather_facts: false
+
+  pre_tasks:
+    - name: Validate Input
+      assert:
+        that:
+        - aws_access_key is defined
+        - aws_secret_key is defined
+        - aws_region is defined
+
+  tasks:
+    - name: Check ansible version
+      when: (ansible_version.major == 2 and ansible_version.minor < 8 ) or (ansible_version.major < 2)
+      run_once: yes
+      fail:
+        msg: Please use Ansible 2.8 or newer
+
+#    - command: "date +'%Y-%m-%d' -d '+0 days'"
+    - command: "date +'%Y-%m-%dT%H:%M:%S' -d '+7 days'"
+      register: expected_expiration_date
+
+    - name: obtain all certificates
+      community.aws.aws_acm_info:
+        statuses:
+          - ISSUED
+        aws_access_key: "{{aws_access_key}}"
+        aws_secret_key: "{{aws_secret_key}}"
+        region: "{{aws_region}}"
+      register: certificates
+      failed_when: certificates.failed
+
+    - name: renew certificate which is going to expire in next 7 days
+      shell: >
+        AWS_ACCESS_KEY_ID="{{aws_access_key}}" AWS_SECRET_ACCESS_KEY="{{ aws_secret_key }}" aws acm import-certificate --certificate-arn {{item.certificate_arn}} --certificate {{item.certificate}} --private-key {{cert_pvt_key}} --certificate-chain {{item.certificate_chain}} --region "{{aws_region}}"
+      when: item.not_after <= expected_expiration_date.stdout
+      with_items:
+        - "{{certificates.certificates}}"
+      register: renewed_certificates
+      failed_when: renewed_certificates.failed
