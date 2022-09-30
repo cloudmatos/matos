@@ -52,4 +52,7 @@ class ResourceModel:
         self.macie = resource.get('macie')
         self.waf = resource.get('waf')
         self.workspaces = resource.get('workspaces')
+        self.trail = resource.get('trail')
+        self.secretsmanager = resource.get('secretsmanager')
+
 
