@@ -1,4 +1,4 @@
-[<img src="https://github.com/cloudmatos/Matos/blob/main/images/matos-logo.png" width="200" height="200">](https://www.cloudmatos.com/)
+[<img src="https://github.com/cloudmatos/matos/blob/master/images/matos-logo.png" width="200" height="200">](https://www.cloudmatos.com/)
 
 # Remediation - Check exposed KMS keys
 KMS keys are used for encrypting and decrypting data which may be sensitive. Publicly accessible KMS keys may allow anyone to perform decryption operations which may reveal data.

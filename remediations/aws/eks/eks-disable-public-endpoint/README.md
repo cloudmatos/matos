@@ -1,4 +1,4 @@
-[<img src="https://github.com/cloudmatos/Matos/blob/main/images/matos-logo.png" width="200" height="200">](https://www.cloudmatos.com/)
+[<img src="https://github.com/cloudmatos/matos/blob/master/images/matos-logo.png" width="200" height="200">](https://www.cloudmatos.com/)
 
 # Remediation - Ensure EKS Clusters are created with Private Endpoint Enabled and Public Access Disabled
 

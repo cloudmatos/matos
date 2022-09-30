@@ -1,4 +1,4 @@
-[<img src="https://github.com/cloudmatos/Matos/blob/main/images/matos-logo.png" width="200" height="200">](https://www.cloudmatos.com/)
+[<img src="https://github.com/cloudmatos/matos/blob/master/images/matos-logo.png" width="200" height="200">](https://www.cloudmatos.com/)
 
 # Remediation - Check for Publicly Accessible Redshift Clusters
 Ensure that your redshift clusters are not exposed to the internet as this could lead to potential data loss as you are giving direct access to your clusters. This is why it is considered a security best practice and should have public access removed. 

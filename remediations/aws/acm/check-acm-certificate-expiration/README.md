@@ -1,4 +1,4 @@
-[<img src="https://github.com/cloudmatos/Matos/blob/main/images/matos-logo.png" width="200" height="200">](https://www.cloudmatos.com/)
+[<img src="https://github.com/cloudmatos/matos/blob/master/images/matos-logo.png" width="200" height="200">](https://www.cloudmatos.com/)
 
 # Remediation - Check if ACM Certificates are about to expire in 7 days or less
 Ensure that your SSL/TLS certificates managed by AWS ACM are renewed 7 days before their validity period ends. Certificate Manager is the AWS service that lets you easily provision, manage, and deploy SSL/TLS certificates for use with other AWS resources such as Elastic Load Balancers, CloudFront distributions or APIs on Amazon API Gateway.

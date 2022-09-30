@@ -1,5 +1,5 @@
 
-[<img src="https://github.com/cloudmatos/Matos/blob/main/images/matos-logo.png" width="200" height="200">](https://www.cloudmatos.com/)
+[<img src="https://github.com/cloudmatos/matos/blob/master/images/matos-logo.png" width="200" height="200">](https://www.cloudmatos.com/)
 
 # Remediation - Check if SNS topics have policy set as Public
 AWS SNS is a hosted topics service that lets you integrate distributed software systems and components. It provides a generic web services API and it can be accessed by any programming language that the AWS SDK supports.

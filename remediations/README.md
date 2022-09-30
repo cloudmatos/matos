@@ -1,1 +1,1 @@
-[<img align="right" src="https://github.com/cloudmatos/Matos/blob/main/images/matos-logo.png" width="150" height="150">](https://www.cloudmatos.com/)
+[<img align="right" src="https://github.com/cloudmatos/matos/blob/master/images/matos-logo.png" width="150" height="150">](https://www.cloudmatos.com/)

@@ -1,4 +1,4 @@
-[<img src="https://github.com/cloudmatos/Matos/blob/main/images/matos-logo.png" width="200" height="200">](https://www.cloudmatos.com/)
+[<img src="https://github.com/cloudmatos/matos/blob/master/images/matos-logo.png" width="200" height="200">](https://www.cloudmatos.com/)
 
 # Remediation - Attaching AWS IAM Roles To EC2 Instances
 [AWS Identity and Access Management (IAM)](https://aws.amazon.com/iam/) roles enable your applications running on Amazon EC2 instance to use temporary security credentials. IAM roles for EC2 make it easier for your applications to make API requests securely from an instance because they do not require you to manage AWS security credentials that the applications use. Recently, AWS enabled to use temporary security credentials for your applications by attaching an IAM role to an existing EC2 instance by using the AWS Console.

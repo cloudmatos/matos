@@ -1,4 +1,4 @@
-[<img src="https://github.com/cloudmatos/Matos/blob/main/images/matos-logo.png" width="200" height="200">](https://www.cloudmatos.com/)
+[<img src="https://github.com/cloudmatos/matos/blob/master/images/matos-logo.png" width="200" height="200">](https://www.cloudmatos.com/)
 
 # Remediation - Ensure there are no ECR repositories set as Public
 AWS ECR is a managed Docker registry service that simplifies Docker container image management. The ECR repository is a collection of Docker images available on AWS. Access control to ECR repositories is governed using resource-based policies. A public ECR repository can expose internal Docker images that contain confidential business logic.

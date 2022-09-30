@@ -1,4 +1,4 @@
-[<img src="https://github.com/cloudmatos/Matos/blob/main/images/matos-logo.png" width="200" height="200">](https://www.cloudmatos.com/)
+[<img src="https://github.com/cloudmatos/matos/blob/master/images/matos-logo.png" width="200" height="200">](https://www.cloudmatos.com/)
 
 # Remediation - Check if RDS Snapshots and Cluster Snapshots are public
 Ensure that your RDS and clusters snapshots are not exposed to the internet as this could lead to potential data loss as you are giving direct access to your backup. This is why it is considered a security best practice and should have public access removed for all snapshots. 
