@@ -108,6 +108,15 @@ def aws_account(resource,provider):
 
     return account
 
+def aws_elasticache(resource,provider):
+    """AWS elasticache service"""
+    elasticache = selfish({
+        "name": "elasticache",
+        "source_data": resource
+    })
+
+    return elasticache
+
 
 def aws_glue_job(resource):
     """
@@ -1146,7 +1155,8 @@ cloud_resource_mappers = {
         'emr': aws_emr,
         'autoscaling': aws_autoscaling,
         'cloudformation': aws_cloudformation,
-        'kinesis': aws_kinesis_stream
+        'kinesis': aws_kinesis_stream,
+        'elasticache': aws_elasticache
 
     },
     'azure': {
