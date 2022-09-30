@@ -47,12 +47,5 @@ class ResourceModel:
         self.ecs = resource.get('ecs')
         self.ecr = resource.get('ecr')
         self.kinesis = resource.get('kinesis')
-        self.elasticache = resource.get('elasticache')
-        self.network_firewall = resource.get('network_firewall')
-        self.macie = resource.get('macie')
-        self.waf = resource.get('waf')
-        self.workspaces = resource.get('workspaces')
-        self.trail = resource.get('trail')
-        self.secretsmanager = resource.get('secretsmanager')
-
-
+        self.key_vault = resource.get('key_vault')
+        self.postgresql = resource.get('postgresql')

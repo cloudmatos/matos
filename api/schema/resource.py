@@ -215,13 +215,8 @@ class ResourceSchema(Schema):
             'ecs',
             'ecr',
             'kinesis',
-            'elasticache',
-            'network_firewall',
-            'macie',
-            'waf',
-            'workspaces',
-            'trail',
-            'secretsmanager'
+            'key_vault',
+            'postgresql'
         ]
 
     cluster = List(Nested(ResourceClusterSchema), required=True)
@@ -271,11 +266,5 @@ class ResourceSchema(Schema):
     ecr = List(Dict())
     account = List(Dict())
     kinesis = List(Dict())
-    elasticache = List(Dict())
-    network_firewall = List(Dict())
-    macie = List(Dict())
-    waf = List(Dict())
-    workspaces = List(Dict())
-    trail = List(Dict())
-    secretsmanager = List(Dict())
-
+    key_vault = List(Dict())
+    postgresql = List(Dict())
