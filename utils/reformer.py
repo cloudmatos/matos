@@ -1,5 +1,6 @@
 # pylint: disable=C0302, R1718, R1710, R1724
 from itertools import groupby
+import secrets
 
 
 def aws_cluster(resource, provider):
@@ -70,7 +71,7 @@ def aws_cluster_service(resource):
     })
 
 
-def aws_glue(resource):
+def aws_glue(resource, provider):
     """AWS clue mapper"""
     glue = selfish({
         "name": "glue",
@@ -107,6 +108,8 @@ def aws_account(resource,provider):
     })
 
     return account
+
+
 
 
 def aws_glue_job(resource):
@@ -652,6 +655,14 @@ def aws_cloudformation(resource, provider):
         "source_data": resource
     })
 
+def aws_glacier(resource,provider):
+    """AWS glacier service"""
+    glacier = selfish({
+        "name": "glacier",
+        "source_data": resource
+    })
+
+    return glacier
 
 def azure_cluster_pod(resource):
     """
@@ -1136,7 +1147,8 @@ cloud_resource_mappers = {
         'securityhub': aws_securityhub,
         'emr': aws_emr,
         'autoscaling': aws_autoscaling,
-        'cloudformation': aws_cloudformation
+        'cloudformation': aws_cloudformation,
+        'glacier' : aws_glacier
 
     },
     'azure': {
@@ -1329,7 +1341,8 @@ def reform_resources(provider, resources):
         res_type = resources.get('type')
         details = resources.get('details')
         if res_type == 'cluster' and provider == 'aws':
-            details['zone'] = resources['location']
+            return {}
+            # details['zone'] = resources['location']
 
         if not details:
             return retdict

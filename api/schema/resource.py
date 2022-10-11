@@ -213,7 +213,8 @@ class ResourceSchema(Schema):
             'autoscaling',
             'cloudformation',
             'ecs',
-            'ecr'
+            'ecr',
+            'glacier'
         ]
 
     cluster = List(Nested(ResourceClusterSchema), required=True)
@@ -262,3 +263,4 @@ class ResourceSchema(Schema):
     ecs = List(Dict())
     ecr = List(Dict())
     account = List(Dict())
+    glacier = List(Dict())
