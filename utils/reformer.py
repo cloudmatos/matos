@@ -1418,8 +1418,7 @@ def reform_resources(provider, resources):
         res_type = resources.get('type')
         details = resources.get('details')
         if res_type == 'cluster' and provider == 'aws':
-            return {}
-            # details['zone'] = resources['location']
+            details['zone'] = resources['location']
 
         if not details:
             return retdict
