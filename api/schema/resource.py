@@ -216,7 +216,12 @@ class ResourceSchema(Schema):
             'ecr',
             'kinesis',
             'key_vault',
-            'postgresql'
+            'postgresql',
+            'workspaces',
+            'waf',
+            'macie',
+            'elasticache',
+            'secretsmanager'
         ]
 
     cluster = List(Nested(ResourceClusterSchema), required=True)
@@ -268,3 +273,8 @@ class ResourceSchema(Schema):
     kinesis = List(Dict())
     key_vault = List(Dict())
     postgresql = List(Dict())
+    workspaces = List(Dict())
+    waf = List(Dict())
+    macie = List(Dict())
+    elasticache = List(Dict())
+    secretsmanager = List(Dict())

@@ -71,7 +71,7 @@ def aws_cluster_service(resource):
     })
 
 
-def aws_glue(resource):
+def aws_glue(resource,provider):
     """AWS clue mapper"""
     glue = selfish({
         "name": "glue",
@@ -141,14 +141,6 @@ def aws_macie(resource,provider):
     return macie
 
 
-def aws_network_firewall(resource,provider):
-    """AWS network firewall service"""
-    network_firewall = selfish({
-        "name": "network_firewall",
-        "source_data": resource
-    })
-
-    return network_firewall
 
 
 
@@ -1229,8 +1221,6 @@ cloud_resource_mappers = {
         'cloudformation': aws_cloudformation,
         'kinesis': aws_kinesis_stream,
         'elasticache': aws_elasticache,
-        'network_firewall': aws_network_firewall,
-        'elasticache': aws_elasticache,
         'macie': aws_macie,
         'waf': aws_waf,
         'workspaces': aws_workspaces,
@@ -1428,7 +1418,8 @@ def reform_resources(provider, resources):
         res_type = resources.get('type')
         details = resources.get('details')
         if res_type == 'cluster' and provider == 'aws':
-            details['zone'] = resources['location']
+            return {}
+            # details['zone'] = resources['location']
 
         if not details:
             return retdict
