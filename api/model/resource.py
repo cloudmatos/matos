@@ -49,3 +49,10 @@ class ResourceModel:
         self.kinesis = resource.get('kinesis')
         self.key_vault = resource.get('key_vault')
         self.postgresql = resource.get('postgresql')
+        self.workspaces = resource.get('workspaces')
+        self.waf = resource.get('waf')
+        self.macie = resource.get('macie')
+        self.elasticache = resource.get('elasticache')
+        self.secretsmanager = resource.get('secretsmanager')
+
+
