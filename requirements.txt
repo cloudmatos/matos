@@ -55,7 +55,7 @@ typing-inspect==0.7.1
 uritemplate==4.1.1
 urllib3==1.26.7
 websocket-client==1.2.3
-Werkzeug==2.0.2
+Werkzeug==2.2.3
 wrapt==1.13.3
 zipp==3.6.0
 matos-gcp-provider
